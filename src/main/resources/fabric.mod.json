@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "healthbar",
+  "version": "${version}",
+  "name": "HealthBar",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/healthbar/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-datagen": [
+      "github.sweety_banana.healthbar.client.HealthbarDataGenerator"
+    ],
+    "client": [
+      "github.sweety_banana.healthbar.client.HealthbarClient"
+    ],
+    "main": [
+      "github.sweety_banana.healthbar.Healthbar"
+    ]
+  },
+  "mixins": [
+    "healthbar.mixins.json",
+    {
+      "config": "healthbar.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
