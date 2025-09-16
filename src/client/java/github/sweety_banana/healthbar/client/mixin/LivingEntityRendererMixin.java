@@ -2,19 +2,26 @@ package github.sweety_banana.healthbar.client.mixin;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import github.sweety_banana.healthbar.Healthbar;
 import github.sweety_banana.healthbar.client.HealthbarClient;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
+import net.minecraft.client.render.entity.PigEntityRenderer;
 import net.minecraft.client.render.entity.feature.FeatureRendererContext;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.state.LivingEntityRenderState;
+import net.minecraft.client.render.entity.state.PigEntityRenderState;
 import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.passive.PigEntity;
+import net.minecraft.util.Identifier;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.scoreboard.ScoreboardDisplaySlot;
 import net.minecraft.util.math.MathHelper;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,6 +30,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import github.sweety_banana.healthbar.client.enums.HeartTypeEnum;
 
 @Mixin(LivingEntityRenderer.class)
 public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extends LivingEntityRenderState, M extends EntityModel<? super S>>
@@ -30,6 +38,9 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extend
         implements FeatureRendererContext<S, M> {
     @Unique
     private LivingEntity mainLivingEntityThing;
+
+    @Unique
+    private final MinecraftClient client = MinecraftClient.getInstance();
 
     @Shadow
     protected abstract boolean hasLabel(T livingEntity, double d);
@@ -45,43 +56,21 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extend
 
     @Inject(
             method = "render(Lnet/minecraft/client/render/entity/state/LivingEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V",
-            at = @At("RETURN")
+            at = @At("TAIL")
     )
-    public void renderHealth(S livingEntityRenderState, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i) {
-        Entity curent_entity = this.dispatcher.targetedEntity;
-
-        if (livingEntityRenderState instanceof PlayerEntityRenderState && HealthbarClient.toggled && curent_entity instanceof AbstractClientPlayerEntity abstractClientPlayerEntity) {
-            matrixStack.push();
+    public void renderHealth(S livingEntityRenderState, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
+        if (HealthbarClient.toggled) {
             double d = livingEntityRenderState.squaredDistanceToCamera;
 
-
-            matrixStack.translate(0, livingEntityRenderState.height + 0.5f, 0);
-            if(this.hasLabel((T) abstractClientPlayerEntity, d)){
-                matrixStack.translate(0.0D, 9.0F * 1.15F * 0.025F, 0.0D);
-                if (d < 100.0 && abstractClientPlayerEntity.getScoreboard().getObjectiveForSlot(2) != null) {
-                    matrixStack.translate(0.0D, 9.0F * 1.15F * 0.025F, 0.0D);
-                }
+            if (d > 50 && client.options.getPerspective().isFirstPerson()){
+                return;
+            } else if (d > 100){
+                return;
             }
 
-            matrixStack.multiply(this.dispatcher.getRotation());
-//            matrixStack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(mc.gameRenderer.getCamera().getPitch()));
-
-            float pixelSize = 0.025F;
-            matrixStack.scale(pixelSize, pixelSize, pixelSize);
-
-            Tessellator tessellator = Tessellator.getInstance();
-//            BufferBuilder vertexConsumer = tessellator.getBuffer();
-
-            BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
-//            RenderSystem.setShader(GameRenderer::getPositionTexShader);
-//          RenderSystem.setShaderTexture(0, DrawableHelper.GUI_ICONS_TEXTURE);
-//            RenderSystem.enableDepthTest();
-
-            Matrix4f model = matrixStack.peek().getPositionMatrix();
-
-            int healthRed = MathHelper.ceil(abstractClientPlayerEntity.getHealth());
-            int maxHealth = MathHelper.ceil(abstractClientPlayerEntity.getMaxHealth());
-            int healthYellow = MathHelper.ceil(abstractClientPlayerEntity.getAbsorptionAmount());
+            int healthRed = MathHelper.ceil(this.mainLivingEntityThing.getHealth());
+            int maxHealth = MathHelper.ceil(this.mainLivingEntityThing.getMaxHealth());
+            int healthYellow = MathHelper.ceil(this.mainLivingEntityThing.getAbsorptionAmount());
 
             int heartsRed = MathHelper.ceil(healthRed / 2.0f);
             boolean lastRedHalf = (healthRed & 1) == 1;
@@ -93,49 +82,75 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extend
             int pixelsTotal = heartsTotal * 8 + 1;
             float maxX = pixelsTotal / 2.0f;
 
-            for (int heart = 0; heart < heartsTotal; heart++){
-                float x = maxX - heart * 8;
-                drawHeart(model, vertexConsumer, x, 0);
-                // Offset in the gui icons texture in hearts
-                // 0 - empty, 2 - red, 8 - yellow, +1 for half
-                int type;
-                if (heart < heartsRed) {
-                    type = 2 * 2;
-                    if (heart == heartsRed - 1 && lastRedHalf) type += 1;
-                } else if (heart < heartsNormal) {
-                    type = 0;
-                } else {
-                    type = 8 * 2;
-                    if(heart == heartsTotal - 1 && lastYellowHalf) type += 1;
+            matrixStack.push();
+            try{
+                matrixStack.translate(0, livingEntityRenderState.height + 0.5f, 0);
+                float pixelSize = 0.025F;
+                matrixStack.multiply(this.dispatcher.getRotation());
+                matrixStack.scale(-pixelSize, pixelSize, pixelSize);
+                Matrix4f model = matrixStack.peek().getPositionMatrix();
+
+                RenderLayer renderLayer;
+                HeartTypeEnum type;
+
+                for (int heart = 0; heart < heartsTotal; heart++) {
+                    float x = maxX - heart * 8;
+
+                    String final_type = HeartTypeEnum.EMPTY.getStatusIcon(mainLivingEntityThing);
+
+                    Identifier heartTextureId = Identifier.of("minecraft", "textures/gui/sprites/hud/heart/container.png");
+                    renderLayer = RenderLayer.getText(heartTextureId);
+                    VertexConsumer vertexConsumer = vertexConsumerProvider.getBuffer(renderLayer);
+                    drawHeart(model, vertexConsumer, x);
+
+                    // Create heart texture identifier
+                    if (heart < heartsRed) {
+                        type = HeartTypeEnum.RED_FULL;
+                        if (heart == heartsRed - 1 && lastRedHalf) type = HeartTypeEnum.RED_HALF;
+                    } else if (heart < heartsNormal) {
+                        type = HeartTypeEnum.EMPTY;
+                    } else {
+                        type = HeartTypeEnum.YELLOW_FULL;
+                        if(heart == heartsTotal - 1 && lastYellowHalf) type = HeartTypeEnum.YELLOW_HALF;
+                    }
+                    final_type = type.getStatusIcon(mainLivingEntityThing);
+                    heartTextureId = Identifier.of("minecraft", "textures/gui/sprites/hud/heart/" + type.icon + ".png");
+
+                    // Get vertex consumer for this specific texture with appropriate render layer
+                    renderLayer = RenderLayer.getText(heartTextureId);
+
+                    vertexConsumer = vertexConsumerProvider.getBuffer(renderLayer);
+                    drawHeart(model, vertexConsumer, x);
+
+//                    if (type != HeartTypeEnum.EMPTY){
+//
+//                    }
                 }
-                if (type != 0) {
-                    drawHeart(model, vertexConsumer, x, type);
-                }
+            } catch (Exception e){
+                System.out.println(e.getMessage());
+                matrixStack.pop();
             }
-
-            tessellator.draw();
-
             matrixStack.pop();
         }
     }
 
     @Unique
-    private static void drawHeart(Matrix4f model, VertexConsumer vertexConsumer, float x, int type){
-        float minU = 16F / 256F + type * 9F / 256F;
-        float maxU = minU + 9F / 256F;
-        float minV = 0;
-        float maxV = minV + 9F / 256F;
-
+    private static void drawHeart(Matrix4f model, VertexConsumer vertexConsumer, float x){
+        float opacity = 1F;
+        float minU = 0F;
+        float maxU = 1F;
+        float minV = 0F;
+        float maxV = 1F;
         float heartSize = 9F;
 
-        drawVertex(model, vertexConsumer, x, 0F - heartSize, 0F, minU, maxV);
-        drawVertex(model, vertexConsumer, x - heartSize, 0F - heartSize, 0F, maxU, maxV);
-        drawVertex(model, vertexConsumer, x - heartSize, 0F, 0F, maxU, minV);
-        drawVertex(model, vertexConsumer, x, 0F, 0F, minU, minV);
+        vertexConsumer.vertex(model, x, 0F - heartSize, 0.0F).texture(minU, maxV).light(15728880).color(1.0F, 1.0F, 1.0F, opacity);
+        vertexConsumer.vertex(model, x - heartSize, 0F - heartSize, 0.0F).texture(maxU, maxV).light(15728880).color(1.0F, 1.0F, 1.0F, opacity);
+        vertexConsumer.vertex(model, x - heartSize, 0F, 0.0F).texture(maxU, minV).light(15728880).color(1.0F, 1.0F, 1.0F, opacity);
+        vertexConsumer.vertex(model, x, 0F, 0.0F).texture(minU, minV).light(15728880).color(1.0F, 1.0F, 1.0F, opacity);
     }
 
-    @Unique
-    private static void drawVertex(Matrix4f model, VertexConsumer vertices, float x, float y, float z, float u, float v) {
-        vertices.vertex(model, x, y, z).texture(u, v).next();
-    }
+//    @Unique
+//    private static void drawVertex(Matrix4f model, VertexConsumer vertices, float x, float y, float z, float u, float v) {
+//        vertices.vertex(model, x, y, z).texture(u, v);
+//    }
 }
