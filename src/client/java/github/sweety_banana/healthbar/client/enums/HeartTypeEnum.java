@@ -2,6 +2,7 @@ package github.sweety_banana.healthbar.client.enums;
 
 
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.entity.effect.StatusEffects;
 
 public enum HeartTypeEnum {
@@ -19,10 +20,18 @@ public enum HeartTypeEnum {
 
     public String getStatusIcon(LivingEntity livingEntity){
         String tempIcon = this.icon;
+        if (livingEntity instanceof AbstractClientPlayerEntity && livingEntity.getWorld().getLevelProperties().isHardcore()){
+            if (this == YELLOW_FULL){
+                tempIcon = "absorbing_hardcore_full";
+            } else if(this == YELLOW_HALF){
+                tempIcon = "absorbing_hardcore_half";
+            }
+            tempIcon = "hardcore_" + tempIcon;
+        }
+
         if (livingEntity.hasStatusEffect(StatusEffects.WITHER)) tempIcon = "withered_" + tempIcon;
-        if (livingEntity.hasStatusEffect(StatusEffects.POISON)) tempIcon = "poisoned_" + tempIcon;
-        if (livingEntity.isFrozen()) tempIcon = "frozen_" + tempIcon;
-        if (livingEntity.getWorld().getLevelProperties().isHardcore()) tempIcon = "hardcore_" + tempIcon;
+        else if (livingEntity.hasStatusEffect(StatusEffects.POISON)) tempIcon = "poisoned_" + tempIcon;
+        else if (livingEntity.isFrozen()) tempIcon = "frozen_" + tempIcon;
         return tempIcon;
     }
 }
