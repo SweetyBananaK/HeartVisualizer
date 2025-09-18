@@ -1,9 +1,10 @@
 package github.sweety_banana.healthbar.client.mixin;
 
 import github.sweety_banana.healthbar.client.HealthbarClient;
+import github.sweety_banana.healthbar.client.HeartCycleRender;
 import github.sweety_banana.healthbar.client.config.HealthbarConfig;
+import github.sweety_banana.healthbar.client.HeartCycleState;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
@@ -30,6 +31,9 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extend
         implements FeatureRendererContext<S, M> {
     @Unique
     private LivingEntity mainLivingEntityThing;
+
+    @Unique
+    private final HeartCycleRender heartCycleRender = new HeartCycleRender(new HeartCycleState());
 
     @Unique
     private final MinecraftClient client = MinecraftClient.getInstance();
@@ -59,6 +63,10 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extend
 //        }
         double d = livingEntityRenderState.squaredDistanceToCamera;
 
+        if (livingEntityRenderState.hurt) {
+            this.heartCycleRender.activeState(true);
+        }
+
         if (d > 50 && client.options.getPerspective().isFirstPerson()){
             return;
         } else if (d > 100){
@@ -77,42 +85,14 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extend
         int heartsTotal = heartsNormal + heartsYellow;
         float heartSize = 9F;
 
-
         int pixelsTotal = heartsTotal >= 10 ? 81 : heartsTotal * 8 + 1;
         float maxX = pixelsTotal / 2.0f;
 
-        RenderLayer renderLayer;
-        Identifier heartTextureId;
-        String final_type;
-        float radius = 0.8f;
-        int heartCount = 8;
-        for (int heart = 0; heart < heartCount; heart++) {
-            final_type = HeartTypeEnum.RED_FULL.getStatusIcon(mainLivingEntityThing);
+        this.heartCycleRender.updateState(healthRed);
+        this.heartCycleRender.renderCycle(this.mainLivingEntityThing, matrixStack, livingEntityRenderState, this.dispatcher, vertexConsumerProvider);
 
-            heartTextureId = Identifier.of("minecraft", "textures/gui/sprites/hud/heart/" + final_type + ".png");
-            renderLayer = HealthbarConfig.isThrough ? RenderLayer.getTextSeeThrough(heartTextureId) : RenderLayer.getText(heartTextureId);
 
-            double angle = 2 * Math.PI / heartCount * heart; // 每颗心间隔角度
 
-            // 如果想让圆环旋转，可以加一个时间偏移
-            double time = (System.currentTimeMillis() % 10000) / 10000.0; // 0~1
-            angle += 2 * Math.PI * time; // 圆环旋转
-
-            float x = (float) (Math.cos(angle) * radius);
-            float z = (float) (Math.sin(angle) * radius);
-
-            matrixStack.push();
-            matrixStack.translate(x, livingEntityRenderState.height*0.7f, z); // y=实体高度+偏移
-            matrixStack.multiply(this.dispatcher.getRotation()); // 始终朝向摄像机
-            matrixStack.scale(-0.05f, 0.05f, 0.05f); // 心大小
-
-            // 绘制心贴图
-            Matrix4f model = matrixStack.peek().getPositionMatrix();
-            VertexConsumer vertexConsumer = vertexConsumerProvider.getBuffer(renderLayer);
-            drawHeart(model, vertexConsumer, heartSize/2f, heartSize);
-
-            matrixStack.pop();
-        }
 
 //        matrixStack.push();
 //        try{
