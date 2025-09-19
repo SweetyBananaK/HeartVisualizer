@@ -4,6 +4,7 @@ import github.sweety_banana.healthbar.client.HealthbarClient;
 import github.sweety_banana.healthbar.client.HeartCycleRender;
 import github.sweety_banana.healthbar.client.config.HealthbarConfig;
 import github.sweety_banana.healthbar.client.HeartCycleState;
+import github.sweety_banana.healthbar.client.HeartCycleHolder;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.EntityRenderer;
@@ -32,8 +33,8 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extend
     @Unique
     private LivingEntity mainLivingEntityThing;
 
-    @Unique
-    private final HeartCycleRender heartCycleRender = new HeartCycleRender(new HeartCycleState());
+//    @Unique
+//    private final HeartCycleRender heartCycleRender = new HeartCycleRender(new HeartCycleState());
 
     @Unique
     private final MinecraftClient client = MinecraftClient.getInstance();
@@ -47,7 +48,7 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extend
 
     @Inject(method = "updateRenderState(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/client/render/entity/state/LivingEntityRenderState;F)V", at = @At("TAIL"))
     public void updateRenderState(T livingEntity, S livingEntityRenderState, float f, CallbackInfo ci){
-        mainLivingEntityThing = livingEntity;
+        this.mainLivingEntityThing = livingEntity;
     }
 
     @Inject(
@@ -62,10 +63,6 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extend
 //            return;
 //        }
         double d = livingEntityRenderState.squaredDistanceToCamera;
-
-        if (livingEntityRenderState.hurt) {
-            this.heartCycleRender.activeState(true);
-        }
 
         if (d > 50 && client.options.getPerspective().isFirstPerson()){
             return;
@@ -88,8 +85,18 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extend
         int pixelsTotal = heartsTotal >= 10 ? 81 : heartsTotal * 8 + 1;
         float maxX = pixelsTotal / 2.0f;
 
-        this.heartCycleRender.updateState(healthRed);
-        this.heartCycleRender.renderCycle(this.mainLivingEntityThing, matrixStack, livingEntityRenderState, this.dispatcher, vertexConsumerProvider);
+        if(this.mainLivingEntityThing instanceof HeartCycleHolder){
+            HeartCycleRender heartCycleRender = ((HeartCycleHolder)this.mainLivingEntityThing).healthBar$getHeartCycleRender();
+            if (livingEntityRenderState.hurt && !heartCycleRender.getState().lastHurt) {
+                healthRed = MathHelper.ceil(this.mainLivingEntityThing.getHealth());
+                lastRedHalf = (healthRed & 1) == 1;
+                heartsRed = MathHelper.ceil(healthRed / 2.0f);
+                heartCycleRender.activeState(livingEntityRenderState.age,true, heartsRed);
+            }
+            heartCycleRender.updateState(livingEntityRenderState.age);
+            heartCycleRender.renderCycle(this.mainLivingEntityThing, matrixStack, livingEntityRenderState, this.dispatcher, vertexConsumerProvider, lastRedHalf);
+            heartCycleRender.getState().lastHurt = livingEntityRenderState.hurt;
+        }
 
 
 

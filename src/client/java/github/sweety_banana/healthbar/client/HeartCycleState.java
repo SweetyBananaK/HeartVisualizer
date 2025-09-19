@@ -4,14 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HeartCycleState {
-    public long lastHitTime = 0;
-    public long animationStartTime = 0;
-    public long rotateEndTime = 0;
+    public boolean lastHurt = false;
+    public float lastHitTime = 0;
+    public float animationStartTime = 0;
+    public float rotateEndTime = 0;
     public boolean active = false;
     public float scale = 0;
     public float offset = 0;
-    public int heartCount = 0;
+    public float age = 0;
+    public int currentHeartCount = 0;
     public List<HeartInstance> hearts;
+    public HeartCycleState(int currentHeartCount) {this.currentHeartCount = currentHeartCount;}
     public HeartCycleState() {}
 
     public void setHearts(int count) {
@@ -32,9 +35,20 @@ public class HeartCycleState {
         }
     }
 
+    public int getValidHearts() {
+        if (hearts == null) return 0;
+        int count = 0;
+        for (HeartInstance heart : hearts) {
+            if (heart.active || heart.breaking) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     public static class HeartInstance {
-        public boolean active;         // 是否还在显示
-        public long breakStartTime;    // 破碎开始时间
+        public boolean active = true;         // 是否还在显示
+        public float breakStartTime;    // 破碎开始时间
         public float breakProgress;    // 0~1 缩小进度
         public boolean breaking;       // 是否正在破碎动画中
     }

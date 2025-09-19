@@ -14,21 +14,23 @@ import org.joml.Matrix4f;
 
 public class HeartCycleRender {
     private final HeartCycleState State;
-    private final static long rotateDuration = HealthbarConfig.HeartRotateDuration;
-    private final static long appearDuration = HealthbarConfig.appearDuration;
-    private final static long disappearDuration = HealthbarConfig.disappearDuration;
+    private final static float rotateDuration = HealthbarConfig.HeartRotateDuration / 50f;
+    private final static float appearDuration = HealthbarConfig.appearDuration / 50f;
+    private final static float disappearDuration = HealthbarConfig.disappearDuration / 50f;
 
-    public void onDamage(int oldHearts, int newHearts) {
+    public void onDamage(int oldHearts, int newHearts, float time) {
         for (int i = newHearts; i < oldHearts; i++) {
             HeartCycleState.HeartInstance heart = this.State.hearts.get(i);
             heart.breaking = true;
-            heart.breakStartTime = System.currentTimeMillis();
+            heart.breakStartTime = time;
         }
     }
 
-    public void activeState(boolean active) {
-        long time = System.currentTimeMillis();
+    public HeartCycleState getState(){
+        return this.State;
+    }
 
+    public void activeState(float time, boolean active, int heartCount) {
         if (!this.State.active) {
             // 第一次触发
             this.State.animationStartTime = time;
@@ -36,13 +38,17 @@ public class HeartCycleRender {
             this.State.active = active;
         } else {
             // 已经处于动画中
-            long nowDelta = time - this.State.animationStartTime;
+            float nowDelta = time - this.State.animationStartTime;
 
             if (nowDelta >= appearDuration && nowDelta < appearDuration + rotateDuration) {
                 // 只在旋转阶段刷新
                 this.State.rotateEndTime = time + rotateDuration;
             }
         }
+        System.out.println("set Hearts: "+ this.State.currentHeartCount);
+        this.State.setHearts(this.State.currentHeartCount);
+        onDamage(this.State.currentHeartCount, heartCount, time);
+        this.State.currentHeartCount = heartCount;
 
         this.State.lastHitTime = time;
     }
@@ -51,19 +57,14 @@ public class HeartCycleRender {
         this.State = State;
     }
 
-    public void updateState(int heartCount){
+    public void updateState(float time){
         if (!this.State.active) return;
-        this.State.setHearts(this.State.heartCount);
-        onDamage(this.State.heartCount, heartCount);
-        this.State.heartCount = heartCount;
-
-        long now = System.currentTimeMillis();
-        long delta = now - this.State.animationStartTime;
+        float delta = time - this.State.animationStartTime;
 
         for (HeartCycleState.HeartInstance heart : this.State.hearts) {
             if (heart.breaking) {
-                //float t = (now - heart.breakStartTime) / (float) HealthbarConfig.heartBreakDuration;
-                float t = (now - heart.breakStartTime) / 100f;
+                float t = (time - heart.breakStartTime) / 50f;
+                System.out.println("BreakProg: " + t);
                 if (t >= 1.0f) {
                     heart.active = false; // 彻底消失
                     heart.breaking = false;
@@ -81,14 +82,14 @@ public class HeartCycleRender {
             this.State.offset = t * targetOffset;
         }
         // 2. 旋转阶段
-        else if (now < this.State.rotateEndTime) {
+        else if (time < this.State.rotateEndTime) {
             this.State.scale = 1.0f;
             this.State.offset = targetOffset;
         }
         // 3. 消失阶段
         else {
-            long disappearStart = this.State.rotateEndTime;
-            long disappearDelta = now - disappearStart;
+            float disappearStart = this.State.rotateEndTime;
+            float disappearDelta = time - disappearStart;
             if (disappearDelta < disappearDuration) {
                 float t = disappearDelta / (float)disappearDuration;
                 this.State.scale = 1.0f - t;
@@ -101,26 +102,27 @@ public class HeartCycleRender {
 
     public void renderCycle(LivingEntity mainLivingEntityThing, MatrixStack matrixStack,
                             LivingEntityRenderState livingEntityRenderState, EntityRenderDispatcher dispatcher,
-                            VertexConsumerProvider vertexConsumerProvider){
+                            VertexConsumerProvider vertexConsumerProvider, boolean lastRedHalf){
         if(!this.State.active) return;
         RenderLayer renderLayer;
         Identifier heartTextureId;
         HeartTypeEnum type;
         String final_type;
         float opacity;
-        boolean lastRedHalf = (this.State.heartCount & 1) == 1;
+        int heartTotal = this.State.getValidHearts();
 
-        for (int heart = 0; heart < this.State.heartCount; heart++) {
+        for (int heart = 0; heart < heartTotal; heart++) {
+            HeartCycleState.HeartInstance currentHeart = this.State.hearts.get(heart);
             type = HeartTypeEnum.RED_FULL;
-            if (heart == this.State.heartCount - 1 && lastRedHalf) type = HeartTypeEnum.RED_HALF;
+            if (heart == heartTotal - 1 && lastRedHalf) type = HeartTypeEnum.RED_HALF;
 
             final_type = type.getStatusIcon(mainLivingEntityThing);
 
             heartTextureId = Identifier.of("minecraft", "textures/gui/sprites/hud/heart/" + final_type + ".png");
             renderLayer = HealthbarConfig.isThrough ? RenderLayer.getTextSeeThrough(heartTextureId) : RenderLayer.getText(heartTextureId);
 
-            double angle = 2 * Math.PI / this.State.heartCount * heart;
-            double time = (double) (System.currentTimeMillis() % rotateDuration) / rotateDuration;
+            double angle = 2 * Math.PI / heartTotal * heart;
+            double time = (livingEntityRenderState.age % rotateDuration) / rotateDuration;
             angle += 2 * Math.PI * time;
 
             // 把 state.offset 融合进来
@@ -134,9 +136,9 @@ public class HeartCycleRender {
             float scale = baseScale * this.State.scale;
             opacity = 1F;
 
-            if (this.State.hearts.get(heart).breaking) {
-                scale *= (1.0f - this.State.hearts.get(heart).breakProgress);
-                opacity = (1.0f - this.State.hearts.get(heart).breakProgress);
+            if (currentHeart.breaking) {
+                scale *= (1.0f - currentHeart.breakProgress);
+                opacity *= (1.0f - currentHeart.breakProgress);
             }
             matrixStack.scale(-scale, scale, scale);
 
