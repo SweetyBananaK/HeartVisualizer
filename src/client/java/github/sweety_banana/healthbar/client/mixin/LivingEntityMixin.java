@@ -28,8 +28,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Se
     @Inject(method = "<init>", at = @At("TAIL"))
     private void init(EntityType entityType, World world, CallbackInfo ci) {
         LivingEntity self = (LivingEntity)(Object)this;
-        int currentHealth = MathHelper.ceil(self.getHealth());
-        this.heartCycleRender.getState().currentHeartCount = MathHelper.ceil(currentHealth / 2.0f);
+        this.heartCycleRender.getState().currentHealth = MathHelper.ceil(self.getHealth());
     }
 
     public LivingEntityMixin(EntityType<?> type, World world) {

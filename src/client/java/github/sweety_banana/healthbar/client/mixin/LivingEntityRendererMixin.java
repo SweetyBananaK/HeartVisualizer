@@ -1,9 +1,6 @@
 package github.sweety_banana.healthbar.client.mixin;
 
-import github.sweety_banana.healthbar.client.HealthbarClient;
 import github.sweety_banana.healthbar.client.HeartCycleRender;
-import github.sweety_banana.healthbar.client.config.HealthbarConfig;
-import github.sweety_banana.healthbar.client.HeartCycleState;
 import github.sweety_banana.healthbar.client.HeartCycleHolder;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
@@ -14,7 +11,6 @@ import net.minecraft.client.render.entity.feature.FeatureRendererContext;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.state.LivingEntityRenderState;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.Identifier;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.MathHelper;
 import org.joml.Matrix4f;
@@ -24,7 +20,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import github.sweety_banana.healthbar.client.enums.HeartTypeEnum;
 
 @Mixin(LivingEntityRenderer.class)
 public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extends LivingEntityRenderState, M extends EntityModel<? super S>>
@@ -64,18 +59,18 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extend
 //        }
         double d = livingEntityRenderState.squaredDistanceToCamera;
 
-        if (d > 50 && client.options.getPerspective().isFirstPerson()){
+        if (d > 250 && client.options.getPerspective().isFirstPerson()){
             return;
-        } else if (d > 100){
+        } else if (d > 300){
             return;
         }
 
-        int healthRed = MathHelper.ceil(this.mainLivingEntityThing.getHealth());
+        int health = MathHelper.ceil(this.mainLivingEntityThing.getHealth());
         int maxHealth = MathHelper.ceil(this.mainLivingEntityThing.getMaxHealth());
         int healthYellow = MathHelper.ceil(this.mainLivingEntityThing.getAbsorptionAmount());
 
-        int heartsRed = MathHelper.ceil(healthRed / 2.0f);
-        boolean lastRedHalf = (healthRed & 1) == 1;
+        int heartsRed = MathHelper.ceil(health / 2.0f);
+        boolean lastRedHalf = (health & 1) == 1;
         int heartsNormal = MathHelper.ceil(maxHealth / 2.0f);
         int heartsYellow = MathHelper.ceil(healthYellow / 2.0f);
         boolean lastYellowHalf = (healthYellow & 1) == 1;
@@ -87,13 +82,10 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extend
 
         if(this.mainLivingEntityThing instanceof HeartCycleHolder){
             HeartCycleRender heartCycleRender = ((HeartCycleHolder)this.mainLivingEntityThing).healthBar$getHeartCycleRender();
-            if (livingEntityRenderState.hurt && !heartCycleRender.getState().lastHurt) {
-                healthRed = MathHelper.ceil(this.mainLivingEntityThing.getHealth());
-                lastRedHalf = (healthRed & 1) == 1;
-                heartsRed = MathHelper.ceil(healthRed / 2.0f);
-                heartCycleRender.activeState(livingEntityRenderState.age,true, heartsRed);
+            if (health != heartCycleRender.getState().currentHealth) {
+                heartCycleRender.activeState(livingEntityRenderState.age,true, health);
             }
-            heartCycleRender.updateState(livingEntityRenderState.age);
+            heartCycleRender.updateState(livingEntityRenderState.age, health);
             heartCycleRender.renderCycle(this.mainLivingEntityThing, matrixStack, livingEntityRenderState, this.dispatcher, vertexConsumerProvider, lastRedHalf);
             heartCycleRender.getState().lastHurt = livingEntityRenderState.hurt;
         }
