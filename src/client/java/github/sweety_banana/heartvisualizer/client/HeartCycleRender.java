@@ -1,7 +1,7 @@
-package github.sweety_banana.healthbar.client;
+package github.sweety_banana.heartvisualizer.client;
 
-import github.sweety_banana.healthbar.client.config.HealthbarConfig;
-import github.sweety_banana.healthbar.client.enums.HeartTypeEnum;
+import github.sweety_banana.heartvisualizer.client.config.HeartVisualizerConfig;
+import github.sweety_banana.heartvisualizer.client.enums.HeartTypeEnum;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -14,33 +14,33 @@ import net.minecraft.util.math.MathHelper;
 import org.joml.Matrix4f;
 
 public class HeartCycleRender {
-    private final HeartCycleState State;
-    private final static float rotateDuration = HealthbarConfig.HeartRotateDuration / 50f;
-    private final static float appearDuration = HealthbarConfig.appearDuration / 50f;
-    private final static float disappearDuration = HealthbarConfig.disappearDuration / 50f;
-    private final static float flashingDuration = HealthbarConfig.flashingDuration / 50f;
+    private final HeartVisualizerState State;
+    private final static float rotateDuration = HeartVisualizerConfig.INSTANCE.heartCircle.rotateDuration / 50f;
+    private final static float appearDuration = HeartVisualizerConfig.INSTANCE.heartCircle.appearDuration / 50f;
+    private final static float disappearDuration = HeartVisualizerConfig.INSTANCE.heartCircle.disappearDuration / 50f;
+    private final static float flashingDuration = HeartVisualizerConfig.INSTANCE.heartCircle.flashingDuration / 50f;
 
-    public HeartCycleRender(HeartCycleState State){
+    public HeartCycleRender(HeartVisualizerState State){
         this.State = State;
     }
 
-    public HeartCycleState getState(){
+    public HeartVisualizerState getState(){
         return this.State;
     }
 
     public void onChange(int oldHearts, int newHearts, float time) {
         for (int i = newHearts; i < oldHearts; i++) {
-            HeartCycleState.HeartInstance heart = this.State.hearts.get(i);
+            HeartVisualizerState.HeartInstance heart = this.State.hearts.get(i);
             heart.breaking = true;
             heart.changeStartTime = time;
         }
         for (int i = oldHearts; i < newHearts; i++){
-            HeartCycleState.HeartInstance heart = this.State.hearts.get(i);
+            HeartVisualizerState.HeartInstance heart = this.State.hearts.get(i);
             heart.healing = true;
             heart.changeStartTime = time;
         }
         for (int i = 0; i < newHearts; i++){
-            HeartCycleState.HeartInstance heart = this.State.hearts.get(i);
+            HeartVisualizerState.HeartInstance heart = this.State.hearts.get(i);
             heart.targetAngle = 2 * Math.PI / newHearts * i;
         }
     }
@@ -79,7 +79,7 @@ public class HeartCycleRender {
         if (!this.State.active) return;
         float delta = time - this.State.animationStartTime;
 
-        for (HeartCycleState.HeartInstance heart : this.State.hearts) {
+        for (HeartVisualizerState.HeartInstance heart : this.State.hearts) {
             if (heart.breaking) {
                 float t = (time - heart.changeStartTime) / 15f;
                 if (t >= 1.0f) {
@@ -142,14 +142,14 @@ public class HeartCycleRender {
         int heartTotal = this.State.getValidHearts();
 
         for (int heart = 0; heart < heartTotal; heart++) {
-            HeartCycleState.HeartInstance currentHeart = this.State.hearts.get(heart);
+            HeartVisualizerState.HeartInstance currentHeart = this.State.hearts.get(heart);
             type = HeartTypeEnum.RED_FULL;
             if (heart == heartTotal - 1 && (lastRedHalf || currentHeart.breaking)) type = HeartTypeEnum.RED_HALF;
 
             final_type = type.getStatusIcon(mainLivingEntityThing);
 
             heartTextureId = Identifier.of("minecraft", "textures/gui/sprites/hud/heart/" + final_type + ".png");
-            renderLayer = HealthbarConfig.isThrough ? RenderLayer.getTextSeeThrough(heartTextureId) : RenderLayer.getText(heartTextureId);
+            renderLayer = HeartVisualizerConfig.INSTANCE.isThrough ? RenderLayer.getTextSeeThrough(heartTextureId) : RenderLayer.getText(heartTextureId);
 
             double angle = currentHeart.currentAngle;
             double time = (livingEntityRenderState.age % rotateDuration) / rotateDuration;

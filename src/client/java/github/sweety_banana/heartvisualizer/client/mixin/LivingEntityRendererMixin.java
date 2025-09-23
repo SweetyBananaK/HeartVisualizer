@@ -1,7 +1,7 @@
-package github.sweety_banana.healthbar.client.mixin;
+package github.sweety_banana.heartvisualizer.client.mixin;
 
-import github.sweety_banana.healthbar.client.HeartCycleRender;
-import github.sweety_banana.healthbar.client.HeartCycleHolder;
+import github.sweety_banana.heartvisualizer.client.HeartCycleRender;
+import github.sweety_banana.heartvisualizer.client.HeartCycleHolder;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.EntityRenderer;
@@ -33,9 +33,6 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extend
 
     @Unique
     private final MinecraftClient client = MinecraftClient.getInstance();
-
-    @Shadow
-    protected abstract boolean hasLabel(T livingEntity, double d);
 
     public LivingEntityRendererMixin(EntityRendererFactory.Context ctx) {
         super(ctx);

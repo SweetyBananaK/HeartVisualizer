@@ -1,11 +1,9 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "github.sweety_banana.healthbar.client.mixin",
+  "package": "github.sweety_banana.heartvisualizer.mixin",
   "compatibilityLevel": "JAVA_21",
-  "client": [
-    "LivingEntityRendererMixin",
-    "LivingEntityMixin"
+  "mixins": [
   ],
   "injectors": {
     "defaultRequire": 1

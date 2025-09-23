@@ -1,9 +1,9 @@
-package github.sweety_banana.healthbar.client;
+package github.sweety_banana.heartvisualizer.client;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class HeartCycleState {
+public class HeartVisualizerState {
     public boolean lastHurt = false;
     public float lastHitTime = 0;
     public float animationStartTime = 0;
@@ -15,8 +15,8 @@ public class HeartCycleState {
     public float age = 0;
     public int currentHealth = 0;
     public List<HeartInstance> hearts;
-    public HeartCycleState(int currentHealth) {this.currentHealth = currentHealth;}
-    public HeartCycleState() {}
+    public HeartVisualizerState(int currentHealth) {this.currentHealth = currentHealth;}
+    public HeartVisualizerState() {}
 
     public void setHearts(int heartsCount) {
         if (this.hearts == null) {

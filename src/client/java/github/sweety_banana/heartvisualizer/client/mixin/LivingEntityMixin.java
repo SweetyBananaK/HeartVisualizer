@@ -1,8 +1,8 @@
-package github.sweety_banana.healthbar.client.mixin;
+package github.sweety_banana.heartvisualizer.client.mixin;
 
-import github.sweety_banana.healthbar.client.HeartCycleHolder;
-import github.sweety_banana.healthbar.client.HeartCycleRender;
-import github.sweety_banana.healthbar.client.HeartCycleState;
+import github.sweety_banana.heartvisualizer.client.HeartCycleHolder;
+import github.sweety_banana.heartvisualizer.client.HeartCycleRender;
+import github.sweety_banana.heartvisualizer.client.HeartVisualizerState;
 import net.minecraft.entity.Attackable;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -23,7 +23,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Se
     public abstract float getHealth();
 
     @Unique
-    private final HeartCycleRender heartCycleRender = new HeartCycleRender(new HeartCycleState());
+    private final HeartCycleRender heartCycleRender = new HeartCycleRender(new HeartVisualizerState());
 
     @Inject(method = "<init>", at = @At("TAIL"))
     private void init(EntityType entityType, World world, CallbackInfo ci) {

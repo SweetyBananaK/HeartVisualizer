@@ -1,9 +1,9 @@
-package github.sweety_banana.healthbar.client;
+package github.sweety_banana.heartvisualizer.client;
 
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 
-public class HealthbarDataGenerator implements DataGeneratorEntrypoint {
+public class HeartVisualizerDataGenerator implements DataGeneratorEntrypoint {
 
     @Override
     public void onInitializeDataGenerator(FabricDataGenerator fabricDataGenerator) {

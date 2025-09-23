@@ -1,4 +1,4 @@
-package github.sweety_banana.healthbar.client.enums;
+package github.sweety_banana.heartvisualizer.client.enums;
 
 
 import net.minecraft.entity.LivingEntity;

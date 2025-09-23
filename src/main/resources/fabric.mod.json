@@ -1,35 +1,39 @@
 {
   "schemaVersion": 1,
-  "id": "healthbar",
+  "id": "heartvisualizer",
   "version": "${version}",
-  "name": "HealthBar",
-  "description": "",
-  "authors": [],
+  "name": "Heart Visualizer",
+  "description": "Displays health in hearts, above head, or numerically",
+  "authors": ["SweetyBanana", "Fcostar"],
   "contact": {},
   "license": "All-Rights-Reserved",
-  "icon": "assets/healthbar/icon.png",
+  "icon": "assets/heartvisualizer/icon.png",
   "environment": "*",
   "entrypoints": {
     "fabric-datagen": [
-      "github.sweety_banana.healthbar.client.HealthbarDataGenerator"
+      "github.sweety_banana.heartvisualizer.client.HeartVisualizerDataGenerator"
     ],
     "client": [
-      "github.sweety_banana.healthbar.client.HealthbarClient"
+      "github.sweety_banana.heartvisualizer.client.HeartVisualizerClient"
     ],
     "main": [
-      "github.sweety_banana.healthbar.Healthbar"
+      "github.sweety_banana.heartvisualizer.HeartVisualizer"
+    ],
+    "modmenu": [
+      "github.sweety_banana.heartvisualizer.client.config.HeartVisualizerModMenu"
     ]
   },
   "mixins": [
-    "healthbar.mixins.json",
+    "heartvisualizer.mixins.json",
     {
-      "config": "healthbar.client.mixins.json",
+      "config": "heartvisualizer.client.mixins.json",
       "environment": "client"
     }
   ],
   "depends": {
     "fabricloader": ">=${loader_version}",
     "fabric": "*",
-    "minecraft": "${minecraft_version}"
+    "minecraft": "${minecraft_version}",
+    "modmenu": "*"
   }
 }
