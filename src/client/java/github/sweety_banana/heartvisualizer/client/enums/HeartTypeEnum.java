@@ -1,10 +1,13 @@
 package github.sweety_banana.heartvisualizer.client.enums;
 
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.entity.effect.StatusEffects;
 
+@Environment(EnvType.CLIENT)
 public enum HeartTypeEnum {
     EMPTY("container"),
     RED_FULL("full"),

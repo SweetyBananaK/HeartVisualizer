@@ -1,13 +1,12 @@
 package github.sweety_banana.heartvisualizer.client.mixin;
 
-import github.sweety_banana.heartvisualizer.client.HeartCycleHolder;
-import github.sweety_banana.heartvisualizer.client.HeartCycleRender;
+import github.sweety_banana.heartvisualizer.client.render.cycle.HeartCycleHolder;
+import github.sweety_banana.heartvisualizer.client.render.cycle.HeartCycleRender;
 import github.sweety_banana.heartvisualizer.client.HeartVisualizerState;
 import net.minecraft.entity.Attackable;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.waypoint.ServerWaypoint;
 import org.spongepowered.asm.mixin.Mixin;
@@ -28,7 +27,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Se
     @Inject(method = "<init>", at = @At("TAIL"))
     private void init(EntityType entityType, World world, CallbackInfo ci) {
         LivingEntity self = (LivingEntity)(Object)this;
-        this.heartCycleRender.getState().currentHealth = MathHelper.ceil(self.getHealth());
+        this.heartCycleRender.getState().currentHealth = self.getHealth() + self.getAbsorptionAmount();
     }
 
     public LivingEntityMixin(EntityType<?> type, World world) {
@@ -36,7 +35,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Se
     }
 
     @Override
-    public HeartCycleRender healthBar$getHeartCycleRender() {
+    public HeartCycleRender heartVisualizer$getHeartCycleRender() {
         return this.heartCycleRender;
     }
 }

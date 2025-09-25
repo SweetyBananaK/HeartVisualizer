@@ -1,7 +1,10 @@
-package github.sweety_banana.heartvisualizer.client;
+package github.sweety_banana.heartvisualizer.client.render.cycle;
 
+import github.sweety_banana.heartvisualizer.client.HeartVisualizerState;
 import github.sweety_banana.heartvisualizer.client.config.HeartVisualizerConfig;
 import github.sweety_banana.heartvisualizer.client.enums.HeartTypeEnum;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -13,12 +16,16 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import org.joml.Matrix4f;
 
+import static github.sweety_banana.heartvisualizer.client.util.Util.drawHeart;
+
+@Environment(EnvType.CLIENT)
 public class HeartCycleRender {
     private final HeartVisualizerState State;
-    private final static float rotateDuration = HeartVisualizerConfig.INSTANCE.heartCircle.rotateDuration / 50f;
-    private final static float appearDuration = HeartVisualizerConfig.INSTANCE.heartCircle.appearDuration / 50f;
-    private final static float disappearDuration = HeartVisualizerConfig.INSTANCE.heartCircle.disappearDuration / 50f;
-    private final static float flashingDuration = HeartVisualizerConfig.INSTANCE.heartCircle.flashingDuration / 50f;
+    private static float heartSize = HeartVisualizerConfig.INSTANCE.heartSize;
+    private static float rotateDuration = HeartVisualizerConfig.INSTANCE.heartCircle.rotateDuration / 50f;
+    private static float appearDuration = HeartVisualizerConfig.INSTANCE.heartCircle.appearDuration / 50f;
+    private static float disappearDuration = HeartVisualizerConfig.INSTANCE.heartCircle.disappearDuration / 50f;
+    private static float flashingDuration = HeartVisualizerConfig.INSTANCE.heartCircle.flashingDuration / 50f;
 
     public HeartCycleRender(HeartVisualizerState State){
         this.State = State;
@@ -45,8 +52,9 @@ public class HeartCycleRender {
         }
     }
 
-    public void activeState(float time, boolean active, int health) {
-        int currentHeart = MathHelper.ceil(this.State.currentHealth / 2.0f);
+    public void activeState(float time, boolean active, float f_health) {
+        int health = MathHelper.ceil(f_health);
+        int currentHeart = MathHelper.ceil(MathHelper.ceil(this.State.currentHealth) / 2.0f);
         int newHeart = MathHelper.ceil(health / 2.0f);
 
         this.State.setHearts(Math.max(currentHeart, newHeart));
@@ -70,13 +78,17 @@ public class HeartCycleRender {
             if (nowDelta >= appearDuration && nowDelta < appearDuration + rotateDuration) {
                 // 只在旋转阶段刷新
                 this.State.rotateEndTime = time + rotateDuration;
+                System.out.println("Current Time: " + time/20f + "   End Time: " + this.State.rotateEndTime/20f);
             }
         }
     }
 
-    public void updateState(float time, int health){
-        if(health != -1) this.State.currentHealth = health;
+    public void updateState(LivingEntityRenderState livingEntityRenderState, float f_health){
+        if(f_health != -1) this.State.currentHealth = f_health;
         if (!this.State.active) return;
+
+
+        float time = livingEntityRenderState.age;
         float delta = time - this.State.animationStartTime;
 
         for (HeartVisualizerState.HeartInstance heart : this.State.hearts) {
@@ -101,7 +113,7 @@ public class HeartCycleRender {
             heart.currentAngle += (heart.targetAngle - heart.currentAngle) * 0.05;
         }
 
-        float targetOffset = 1.0f; // 最大外移距离
+        float targetOffset = livingEntityRenderState.width + 0.3f; // 最大外移距离
         // 出现
         if (delta < appearDuration) {
             float t = delta / (float)appearDuration;
@@ -132,7 +144,7 @@ public class HeartCycleRender {
 
     public void renderCycle(LivingEntity mainLivingEntityThing, MatrixStack matrixStack,
                             LivingEntityRenderState livingEntityRenderState, EntityRenderDispatcher dispatcher,
-                            VertexConsumerProvider vertexConsumerProvider, boolean lastRedHalf){
+                            VertexConsumerProvider vertexConsumerProvider, boolean lastRedHalf, boolean lastYellowHalf, int heartsYellowStart, int heartsYellow){
         if(!this.State.active) return;
         RenderLayer renderLayer;
         Identifier heartTextureId;
@@ -143,8 +155,11 @@ public class HeartCycleRender {
 
         for (int heart = 0; heart < heartTotal; heart++) {
             HeartVisualizerState.HeartInstance currentHeart = this.State.hearts.get(heart);
+
             type = HeartTypeEnum.RED_FULL;
-            if (heart == heartTotal - 1 && (lastRedHalf || currentHeart.breaking)) type = HeartTypeEnum.RED_HALF;
+            if (heart == heartsYellowStart - 1 && (lastRedHalf || currentHeart.breaking)) type = HeartTypeEnum.RED_HALF;
+            if (heart >= heartsYellowStart && !currentHeart.breaking) type = HeartTypeEnum.YELLOW_FULL;
+            if (heartsYellow != 0 && heart == heartTotal - 1 && (lastYellowHalf || currentHeart.breaking)) type = HeartTypeEnum.YELLOW_HALF;
 
             final_type = type.getStatusIcon(mainLivingEntityThing);
 
@@ -152,7 +167,7 @@ public class HeartCycleRender {
             renderLayer = HeartVisualizerConfig.INSTANCE.isThrough ? RenderLayer.getTextSeeThrough(heartTextureId) : RenderLayer.getText(heartTextureId);
 
             double angle = currentHeart.currentAngle;
-            double time = (livingEntityRenderState.age % rotateDuration) / rotateDuration;
+            double time = (livingEntityRenderState.age % 30) / 30;
             angle += 2 * Math.PI * time;
 
             float x = (float) (Math.cos(angle) * this.State.offset);
@@ -165,17 +180,11 @@ public class HeartCycleRender {
             float scale = baseScale * this.State.scale;
             opacity = 1F;
             if (this.State.flashing && heartTotal < 10){
-                // frequency 控制闪烁速度
                 float frequency = 4.0f; // 每秒 4 次完整闪烁
                 double t = livingEntityRenderState.age * (Math.PI * 2 * frequency / 20.0);
 
-                // index 偏移：奇偶心交替
                 double phaseOffset = (heart % 2 == 0) ? 0.0 : Math.PI;
-
-                // 波动函数输出范围是 [-1,1]，映射到 [0,1]
                 float wave = (float)((Math.sin(t + phaseOffset) + 1.0) / 2.0);
-
-                // 控制闪烁强度（0~1 -> 透明度）
                 float minOpacity = 0.5f;
                 opacity *= minOpacity + (1.0f - minOpacity) * wave;
             }
@@ -194,21 +203,17 @@ public class HeartCycleRender {
             // 绘制心贴图
             Matrix4f model = matrixStack.peek().getPositionMatrix();
             VertexConsumer vertexConsumer = vertexConsumerProvider.getBuffer(renderLayer);
-            drawHeart(model, vertexConsumer, 9f/2f, 9f, opacity);
+            drawHeart(model, vertexConsumer, heartSize/2f, heartSize, opacity);
 
             matrixStack.pop();
         }
     }
-    private static void drawHeart(Matrix4f model, VertexConsumer vertexConsumer, float x, float heartSize, float opacity){
-        float minU = 0F;
-        float maxU = 1F;
-        float minV = 0F;
-        float maxV = 1F;
 
-
-        vertexConsumer.vertex(model, x, 0F - heartSize, 0.0F).texture(minU, maxV).light(15728880).color(1.0F, 1.0F, 1.0F, opacity);
-        vertexConsumer.vertex(model, x - heartSize, 0F - heartSize, 0.0F).texture(maxU, maxV).light(15728880).color(1.0F, 1.0F, 1.0F, opacity);
-        vertexConsumer.vertex(model, x - heartSize, 0F, 0.0F).texture(maxU, minV).light(15728880).color(1.0F, 1.0F, 1.0F, opacity);
-        vertexConsumer.vertex(model, x, 0F, 0.0F).texture(minU, minV).light(15728880).color(1.0F, 1.0F, 1.0F, opacity);
+    public static void updateConfig(){
+        heartSize = HeartVisualizerConfig.INSTANCE.heartSize;
+        rotateDuration = HeartVisualizerConfig.INSTANCE.heartCircle.rotateDuration / 50f;
+        appearDuration = HeartVisualizerConfig.INSTANCE.heartCircle.appearDuration / 50f;
+        disappearDuration = HeartVisualizerConfig.INSTANCE.heartCircle.disappearDuration / 50f;
+        flashingDuration = HeartVisualizerConfig.INSTANCE.heartCircle.flashingDuration / 50f;
     }
 }

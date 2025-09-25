@@ -1,0 +1,15 @@
+{
+  "title.heartvisualizer.config": "心视化设置",
+  "category.heartvisualizer.general": "通用",
+  "label.heartvisualizer.general": "通用",
+  "option.heartvisualizer.displaytype": "显示类型",
+  "option.heartvisualizer.displaytype.heart_circle": "心环",
+  "option.heartvisualizer.displaytype.heart_bar": "心条",
+  "option.heartvisualizer.displaytype.count": "心量",
+  "option.heartvisualizer.showthrough": "透视眼",
+  "option.heartvisualizer.heartcycle.rotateduration": "旋转持续时间",
+  "option.heartvisualizer.heartcycle.appearduration": "出现时间",
+  "option.heartvisualizer.heartcycle.disappearduration": "消失时间",
+  "tooltip.heartvisualizer.showthrough": "如果开启，可以穿透墙壁看到",
+  "label.heartvisualizer.heartcycle": "心环"
+}

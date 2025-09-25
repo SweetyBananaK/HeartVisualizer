@@ -1,0 +1,18 @@
+{
+  "title.heartvisualizer.config": "Heart Visualizer Settings",
+  "category.heartvisualizer.general": "General",
+  "label.heartvisualizer.general": "General",
+  "option.heartvisualizer.isactive": "Heart Visualizer Active",
+  "option.heartvisualizer.displaytype": "Display Type",
+  "option.heartvisualizer.displaytype.heart_circle": "Heart Cycle",
+  "option.heartvisualizer.displaytype.heart_bar": "Heart On Head",
+  "option.heartvisualizer.displaytype.count": "Heart with Count",
+  "option.heartvisualizer.showthrough": "Show Through Walls",
+  "option.heartvisualizer.heartcycle.heartsize": "Heart Size",
+  "option.heartvisualizer.heartcycle.rotateduration": "Rotate Duration",
+  "option.heartvisualizer.heartcycle.appearduration": "Appear Duration",
+  "option.heartvisualizer.heartcycle.disappearduration": "Disappear Duration",
+  "option.heartvisualizer.heartcycle.isflashing": "Heart Ring Flashing",
+  "tooltip.heartvisualizer.showthrough": "If enabled, hearts will be visible even behind walls.",
+  "label.heartvisualizer.heartcycle": "Heart Cycle"
+}

@@ -1,7 +1,12 @@
 package github.sweety_banana.heartvisualizer.client.mixin;
 
-import github.sweety_banana.heartvisualizer.client.HeartCycleRender;
-import github.sweety_banana.heartvisualizer.client.HeartCycleHolder;
+import github.sweety_banana.heartvisualizer.client.render.bar.HeartBarRender;
+import github.sweety_banana.heartvisualizer.client.render.count.HeartCountRender;
+import github.sweety_banana.heartvisualizer.client.render.cycle.HeartCycleRender;
+import github.sweety_banana.heartvisualizer.client.render.cycle.HeartCycleHolder;
+import github.sweety_banana.heartvisualizer.client.config.HeartVisualizerConfig;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.EntityRenderer;
@@ -13,23 +18,19 @@ import net.minecraft.client.render.entity.state.LivingEntityRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.MathHelper;
-import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+@Environment(EnvType.CLIENT)
 @Mixin(LivingEntityRenderer.class)
 public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extends LivingEntityRenderState, M extends EntityModel<? super S>>
         extends EntityRenderer<T, S>
         implements FeatureRendererContext<S, M> {
     @Unique
     private LivingEntity mainLivingEntityThing;
-
-//    @Unique
-//    private final HeartCycleRender heartCycleRender = new HeartCycleRender(new HeartCycleState());
 
     @Unique
     private final MinecraftClient client = MinecraftClient.getInstance();
@@ -54,6 +55,9 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extend
 //        if (mainLivingEntityThing != client.player) {
 //            return;
 //        }
+        if (!HeartVisualizerConfig.INSTANCE.isActive){
+            return;
+        }
         double d = livingEntityRenderState.squaredDistanceToCamera;
 
         if (d > 250 && client.options.getPerspective().isFirstPerson()){
@@ -61,10 +65,12 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extend
         } else if (d > 300){
             return;
         }
+        float f_health = this.mainLivingEntityThing.getHealth();
+        float f_healthYellow = this.mainLivingEntityThing.getAbsorptionAmount();
 
-        int health = MathHelper.ceil(this.mainLivingEntityThing.getHealth());
+        int health = MathHelper.ceil(f_health);
         int maxHealth = MathHelper.ceil(this.mainLivingEntityThing.getMaxHealth());
-        int healthYellow = MathHelper.ceil(this.mainLivingEntityThing.getAbsorptionAmount());
+        int healthYellow = MathHelper.ceil(f_healthYellow);
 
         int heartsRed = MathHelper.ceil(health / 2.0f);
         boolean lastRedHalf = (health & 1) == 1;
@@ -72,139 +78,39 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extend
         int heartsYellow = MathHelper.ceil(healthYellow / 2.0f);
         boolean lastYellowHalf = (healthYellow & 1) == 1;
         int heartsTotal = heartsNormal + heartsYellow;
-        float heartSize = 9F;
 
         int pixelsTotal = heartsTotal >= 10 ? 81 : heartsTotal * 8 + 1;
         float maxX = pixelsTotal / 2.0f;
 
-        if(this.mainLivingEntityThing instanceof HeartCycleHolder){
-            HeartCycleRender heartCycleRender = ((HeartCycleHolder)this.mainLivingEntityThing).healthBar$getHeartCycleRender();
-            if (health != heartCycleRender.getState().currentHealth) {
-                heartCycleRender.activeState(livingEntityRenderState.age,true, health);
+        matrixStack.push();
+        try {
+            if (HeartVisualizerConfig.INSTANCE.displayType == HeartVisualizerConfig.HeartDisplayType.HEART_CIRCLE && this.mainLivingEntityThing instanceof HeartCycleHolder) {
+                HeartCycleRender heartCycleRender = ((HeartCycleHolder) this.mainLivingEntityThing).heartVisualizer$getHeartCycleRender();
+                if ((f_health + f_healthYellow) != heartCycleRender.getState().currentHealth) {
+                    System.out.println("Cycle active..." + f_health + f_healthYellow);
+                    heartCycleRender.activeState(livingEntityRenderState.age, true, f_health + f_healthYellow);
+                }
+                heartCycleRender.updateState(livingEntityRenderState, f_health + f_healthYellow);
+                heartCycleRender.renderCycle(this.mainLivingEntityThing, matrixStack, livingEntityRenderState, this.dispatcher, vertexConsumerProvider, lastRedHalf, lastYellowHalf, heartsRed, heartsYellow);
+                heartCycleRender.getState().lastHurt = livingEntityRenderState.hurt;
+            } else {
+                matrixStack.translate(0, livingEntityRenderState.height + 0.5f, 0);
+                float pixelSize = 0.025F;
+                matrixStack.multiply(this.dispatcher.getRotation());
+                matrixStack.scale(-pixelSize, pixelSize, pixelSize);
+
+                if (heartsTotal > 40 || HeartVisualizerConfig.INSTANCE.displayType == HeartVisualizerConfig.HeartDisplayType.COUNT) {
+                    HeartCountRender heartCountRender = new HeartCountRender();
+                    heartCountRender.renderCount(this.mainLivingEntityThing, matrixStack, vertexConsumerProvider, health, this.client);
+                } else if (HeartVisualizerConfig.INSTANCE.displayType == HeartVisualizerConfig.HeartDisplayType.HEART_BAR) {
+                    HeartBarRender heartBarRender = new HeartBarRender();
+                    heartBarRender.renderBar(this.mainLivingEntityThing, matrixStack, vertexConsumerProvider, heartsRed, heartsNormal, heartsTotal, lastRedHalf, lastYellowHalf, maxX);
+                }
             }
-            heartCycleRender.updateState(livingEntityRenderState.age, health);
-            heartCycleRender.renderCycle(this.mainLivingEntityThing, matrixStack, livingEntityRenderState, this.dispatcher, vertexConsumerProvider, lastRedHalf);
-            heartCycleRender.getState().lastHurt = livingEntityRenderState.hurt;
+        } catch (Exception e){
+            System.out.println(e.getMessage());
+            matrixStack.pop();
         }
-
-
-
-
-//        matrixStack.push();
-//        try{
-//            matrixStack.translate(0, livingEntityRenderState.height + 0.5f, 0);
-//            float pixelSize = 0.025F;
-//            matrixStack.multiply(this.dispatcher.getRotation());
-//            matrixStack.scale(-pixelSize, pixelSize, pixelSize);
-//
-//            Matrix4f model;
-//            RenderLayer renderLayer;
-//            HeartTypeEnum type;
-//            Identifier heartTextureId;
-//            VertexConsumer vertexConsumer;
-//            String final_type;
-//            String HeartNum;
-//            int textWidth;
-//            float x;
-//
-//            if (heartsTotal > 40){
-//                final_type = HeartTypeEnum.RED_FULL.getStatusIcon(mainLivingEntityThing);
-//
-//                heartTextureId = Identifier.of("minecraft", "textures/gui/sprites/hud/heart/" + final_type + ".png");
-//                renderLayer = HealthbarConfig.isThrough ? RenderLayer.getTextSeeThrough(heartTextureId) : RenderLayer.getText(heartTextureId);
-//
-//                HeartNum = String.valueOf(heartsRed);
-//                textWidth = this.client.textRenderer.getWidth(HeartNum);
-//
-//                matrixStack.push();
-//                matrixStack.translate(0, 2.2f, 0);
-//                matrixStack.scale(2.0f,2.0f,2.0f);
-//                model = matrixStack.peek().getPositionMatrix();
-//                vertexConsumer = vertexConsumerProvider.getBuffer(renderLayer);
-//                drawHeart(model, vertexConsumer, heartSize/2f, heartSize);
-//                matrixStack.pop();
-//
-//                matrixStack.push();
-//                matrixStack.translate(0, 0, 0.1f); // 把文字稍微往前挪，避免被心覆盖
-//                matrixStack.scale(-0.6F, -0.6F, 1F); // 把坐标系缩放到能正常显示文字
-//                Matrix4f textMatrix = matrixStack.peek().getPositionMatrix();
-//                //VertexConsumerProvider.Immediate immediate = client.getBufferBuilders().getEntityVertexConsumers();
-//
-//                this.client.textRenderer.draw(
-//                        String.valueOf(heartsRed),
-//                        -textWidth/2f, 8,
-//                        0xFFFFFFFF,
-//                        false,
-//                        textMatrix,
-//                        vertexConsumerProvider,
-//                        HealthbarConfig.isThrough ? TextRenderer.TextLayerType.SEE_THROUGH : TextRenderer.TextLayerType.NORMAL,
-//                        0, 15728880
-//                        );
-//                //immediate.draw();
-//                matrixStack.pop();
-//            } else {
-//                int rows = Math.min(MathHelper.ceil(heartsTotal / 10F), 4) - 1;
-//
-//                for(int row = 0; row <= rows; row++){
-//                    int hearts = (row == rows && heartsTotal % 10 != 0) ? heartsTotal % 10 : 10;
-//                    matrixStack.push();
-//                    matrixStack.translate(0f,heartSize / (rows+0.1f) * row,-0.1f * row);
-//                    model = matrixStack.peek().getPositionMatrix();
-//
-//                    for (int heart = 0; heart < hearts; heart++) {
-//                        x = maxX - heart * 8;
-//
-//                        final_type = HeartTypeEnum.EMPTY.getStatusIcon(mainLivingEntityThing);
-//
-//                        heartTextureId = Identifier.of("minecraft", "textures/gui/sprites/hud/heart/" + final_type + ".png");
-//                        renderLayer = RenderLayer.getText(heartTextureId);
-//                        vertexConsumer = vertexConsumerProvider.getBuffer(renderLayer);
-//                        drawHeart(model, vertexConsumer, x, heartSize);
-//
-//                        // Create heart texture identifier
-//                        if (heart < heartsRed - row * 10) {
-//                            type = HeartTypeEnum.RED_FULL;
-//                            if (heart == heartsRed - 1 && lastRedHalf) type = HeartTypeEnum.RED_HALF;
-//                        } else if (heart < heartsNormal) {
-//                            type = HeartTypeEnum.EMPTY;
-//                        } else {
-//                            type = HeartTypeEnum.YELLOW_FULL;
-//                            if(heart == heartsTotal - 1 && lastYellowHalf) type = HeartTypeEnum.YELLOW_HALF;
-//                        }
-//                        if (type != HeartTypeEnum.EMPTY){
-//                            final_type = type.getStatusIcon(mainLivingEntityThing);
-//                            heartTextureId = Identifier.of("minecraft", "textures/gui/sprites/hud/heart/" + final_type + ".png");
-//
-//                            // Get vertex consumer for this specific texture with appropriate render layer
-//                            renderLayer = RenderLayer.getText(heartTextureId);
-//
-//                            vertexConsumer = vertexConsumerProvider.getBuffer(renderLayer);
-//                            drawHeart(model, vertexConsumer, x, heartSize);
-//                        }
-//                    }
-//                    matrixStack.pop();
-//                }
-//            }
-//        } catch (Exception e){
-//            System.out.println(e.getMessage());
-//            matrixStack.pop();
-//        }
-//        matrixStack.pop();
+        matrixStack.pop();
     }
-
-    @Unique
-    private static void drawHeart(Matrix4f model, VertexConsumer vertexConsumer, float x, float heartSize){
-        float opacity = 1F;
-        float minU = 0F;
-        float maxU = 1F;
-        float minV = 0F;
-        float maxV = 1F;
-
-
-        vertexConsumer.vertex(model, x, 0F - heartSize, 0.0F).texture(minU, maxV).light(15728880).color(1.0F, 1.0F, 1.0F, opacity);
-        vertexConsumer.vertex(model, x - heartSize, 0F - heartSize, 0.0F).texture(maxU, maxV).light(15728880).color(1.0F, 1.0F, 1.0F, opacity);
-        vertexConsumer.vertex(model, x - heartSize, 0F, 0.0F).texture(maxU, minV).light(15728880).color(1.0F, 1.0F, 1.0F, opacity);
-        vertexConsumer.vertex(model, x, 0F, 0.0F).texture(minU, minV).light(15728880).color(1.0F, 1.0F, 1.0F, opacity);
-    }
-
 }

@@ -1,8 +1,12 @@
 package github.sweety_banana.heartvisualizer.client;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+
 import java.util.ArrayList;
 import java.util.List;
 
+@Environment(EnvType.CLIENT)
 public class HeartVisualizerState {
     public boolean lastHurt = false;
     public float lastHitTime = 0;
@@ -12,10 +16,9 @@ public class HeartVisualizerState {
     public boolean flashing = false;
     public float scale = 0;
     public float offset = 0;
-    public float age = 0;
-    public int currentHealth = 0;
+    public float currentHealth = 0;
     public List<HeartInstance> hearts;
-    public HeartVisualizerState(int currentHealth) {this.currentHealth = currentHealth;}
+
     public HeartVisualizerState() {}
 
     public void setHearts(int heartsCount) {
