@@ -193,7 +193,7 @@ public class HeartCircleRender {
             HeartVisualizerState.HeartInstance currentHeart = this.State.hearts.get(heart);
 
             type = HeartTypeEnum.RED_FULL;
-            if (heart == heartsYellowStart - 1 && (lastRedHalf || currentHeart.breaking)) type = HeartTypeEnum.RED_HALF;
+            if ((heart == heartsYellowStart - 1 && lastRedHalf) || (heart == heartsYellowStart && currentHeart.breaking)) type = HeartTypeEnum.RED_HALF;
             if (heart >= heartsYellowStart && !currentHeart.breaking) type = HeartTypeEnum.YELLOW_FULL;
             if (heartsYellow != 0 && heart == heartTotal - 1 && (lastYellowHalf || currentHeart.breaking)) type = HeartTypeEnum.YELLOW_HALF;
 

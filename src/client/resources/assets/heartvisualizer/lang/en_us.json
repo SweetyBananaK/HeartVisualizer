@@ -15,5 +15,7 @@
   "option.heartvisualizer.heartcircle.isflashing": "Heart Circle Flashing",
   "tooltip.heartvisualizer.isflashing": "If enabled, hearts will flash when they appear.",
   "tooltip.heartvisualizer.showthrough": "If enabled, hearts will be visible even behind walls.",
-  "label.heartvisualizer.heartcircle": "Heart Cycle"
+  "label.heartvisualizer.heartcircle": "Heart Cycle",
+  "key.heartvisualizer.openMenu": "Open Heart Visualizer Settings Menu",
+  "key.categories.heartvisualizer": "Heart Visualizer"
 }

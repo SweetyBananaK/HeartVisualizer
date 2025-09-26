@@ -15,5 +15,7 @@
   "option.heartvisualizer.heartcircle.isflashing": "是否闪烁",
   "tooltip.heartvisualizer.isflashing": "如果开启，当心环出现时会有闪烁特效",
   "tooltip.heartvisualizer.showthrough": "如果开启，可以穿透墙壁显示",
-  "label.heartvisualizer.heartcircle": "心环"
+  "label.heartvisualizer.heartcircle": "心环",
+  "key.heartvisualizer.openMenu": "打开心视化设置页面",
+  "key.categories.heartvisualizer": "心视化"
 }
