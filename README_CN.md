@@ -2,7 +2,7 @@
 # 心视化
 <div style="text-align:center">
   <img src="res/Heart%20Visualizer_16_9.png" alt="mod"/>
-  <p style="font-size: 12px; margin: -8px 2px 2px 430px; 0;">*AI-generated</p>
+  <p style="font-size: 12px; margin: -8px 2px 2px 430px; 0;">*AI-生成</p>
 </div>
 
 心视化提供了三种血量的显示方式: 心环，心条和数字。其中部分内容来自 [HealthIndicators](https://github.com/AdyTech99/HealthIndicators).
