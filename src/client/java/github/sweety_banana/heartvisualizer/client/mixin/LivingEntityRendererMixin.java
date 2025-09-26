@@ -2,8 +2,8 @@ package github.sweety_banana.heartvisualizer.client.mixin;
 
 import github.sweety_banana.heartvisualizer.client.render.bar.HeartBarRender;
 import github.sweety_banana.heartvisualizer.client.render.count.HeartCountRender;
-import github.sweety_banana.heartvisualizer.client.render.cycle.HeartCycleRender;
-import github.sweety_banana.heartvisualizer.client.render.cycle.HeartCycleHolder;
+import github.sweety_banana.heartvisualizer.client.render.circle.HeartCircleRender;
+import github.sweety_banana.heartvisualizer.client.render.circle.HeartCircleHolder;
 import github.sweety_banana.heartvisualizer.client.config.HeartVisualizerConfig;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -67,6 +67,7 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extend
         }
         float f_health = this.mainLivingEntityThing.getHealth();
         float f_healthYellow = this.mainLivingEntityThing.getAbsorptionAmount();
+        float f_healthTotal = f_health + f_healthYellow;
 
         int health = MathHelper.ceil(f_health);
         int maxHealth = MathHelper.ceil(this.mainLivingEntityThing.getMaxHealth());
@@ -84,15 +85,14 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extend
 
         matrixStack.push();
         try {
-            if (HeartVisualizerConfig.INSTANCE.displayType == HeartVisualizerConfig.HeartDisplayType.HEART_CIRCLE && this.mainLivingEntityThing instanceof HeartCycleHolder) {
-                HeartCycleRender heartCycleRender = ((HeartCycleHolder) this.mainLivingEntityThing).heartVisualizer$getHeartCycleRender();
-                if ((f_health + f_healthYellow) != heartCycleRender.getState().currentHealth) {
-                    System.out.println("Cycle active..." + f_health + f_healthYellow);
-                    heartCycleRender.activeState(livingEntityRenderState.age, true, f_health + f_healthYellow);
+            if (HeartVisualizerConfig.INSTANCE.displayType == HeartVisualizerConfig.HeartDisplayType.HEART_CIRCLE && this.mainLivingEntityThing instanceof HeartCircleHolder) {
+                HeartCircleRender heartCircleRender = ((HeartCircleHolder) this.mainLivingEntityThing).heartVisualizer$getHeartCycleRender();
+                if ((f_healthTotal) != heartCircleRender.getState().currentHealth) {
+                    heartCircleRender.activeState(livingEntityRenderState.age, true, f_healthTotal);
                 }
-                heartCycleRender.updateState(livingEntityRenderState, f_health + f_healthYellow);
-                heartCycleRender.renderCycle(this.mainLivingEntityThing, matrixStack, livingEntityRenderState, this.dispatcher, vertexConsumerProvider, lastRedHalf, lastYellowHalf, heartsRed, heartsYellow);
-                heartCycleRender.getState().lastHurt = livingEntityRenderState.hurt;
+                heartCircleRender.updateState(livingEntityRenderState, f_healthTotal);
+                heartCircleRender.renderCircle(this.mainLivingEntityThing, matrixStack, livingEntityRenderState, this.dispatcher, vertexConsumerProvider, lastRedHalf, lastYellowHalf, heartsRed, heartsYellow);
+                heartCircleRender.getState().lastHurt = livingEntityRenderState.hurt;
             } else {
                 matrixStack.translate(0, livingEntityRenderState.height + 0.5f, 0);
                 float pixelSize = 0.025F;

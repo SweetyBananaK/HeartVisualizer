@@ -1,0 +1,8 @@
+HeartVisualizer
+Copyright (c) 2025 HeartVisualizer contributors
+
+This project is licensed under the MIT License.
+
+Third-party components:
+- HealthIndicators (LGPL-3.0 License)
+  https://github.com/AdyTech99/HealthIndicators

@@ -55,13 +55,13 @@ public class HeartCountRender {
         matrixStack.pop();
 
         matrixStack.push();
-        matrixStack.translate(0, 0, 0.1f); // 把文字稍微往前挪，避免被心覆盖
-        matrixStack.scale(-0.6F, -0.6F, 1F); // 把坐标系缩放到能正常显示文字
+        matrixStack.translate(0, 0, 0.1f);
+        matrixStack.scale(-0.6F*heartSize/9f, -0.6F*heartSize/9f, heartSize/9f);
         Matrix4f textMatrix = matrixStack.peek().getPositionMatrix();
 
         client.textRenderer.draw(
                 String.valueOf(health),
-                -textWidth/2f, 8,
+                -textWidth/2f, heartSize/2f,
                 0xFFFFFFFF,
                 false,
                 textMatrix,

@@ -1,7 +1,7 @@
 package github.sweety_banana.heartvisualizer.client.mixin;
 
-import github.sweety_banana.heartvisualizer.client.render.cycle.HeartCycleHolder;
-import github.sweety_banana.heartvisualizer.client.render.cycle.HeartCycleRender;
+import github.sweety_banana.heartvisualizer.client.render.circle.HeartCircleHolder;
+import github.sweety_banana.heartvisualizer.client.render.circle.HeartCircleRender;
 import github.sweety_banana.heartvisualizer.client.HeartVisualizerState;
 import net.minecraft.entity.Attackable;
 import net.minecraft.entity.Entity;
@@ -17,17 +17,17 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LivingEntity.class)
-public abstract class LivingEntityMixin extends Entity implements Attackable, ServerWaypoint, HeartCycleHolder {
+public abstract class LivingEntityMixin extends Entity implements Attackable, ServerWaypoint, HeartCircleHolder {
     @Shadow
     public abstract float getHealth();
 
     @Unique
-    private final HeartCycleRender heartCycleRender = new HeartCycleRender(new HeartVisualizerState());
+    private final HeartCircleRender heartCircleRender = new HeartCircleRender(new HeartVisualizerState());
 
     @Inject(method = "<init>", at = @At("TAIL"))
     private void init(EntityType entityType, World world, CallbackInfo ci) {
         LivingEntity self = (LivingEntity)(Object)this;
-        this.heartCycleRender.getState().currentHealth = self.getHealth() + self.getAbsorptionAmount();
+        this.heartCircleRender.getState().currentHealth = self.getHealth() + self.getAbsorptionAmount();
     }
 
     public LivingEntityMixin(EntityType<?> type, World world) {
@@ -35,7 +35,7 @@ public abstract class LivingEntityMixin extends Entity implements Attackable, Se
     }
 
     @Override
-    public HeartCycleRender heartVisualizer$getHeartCycleRender() {
-        return this.heartCycleRender;
+    public HeartCircleRender heartVisualizer$getHeartCycleRender() {
+        return this.heartCircleRender;
     }
 }
