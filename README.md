@@ -1,3 +1,4 @@
+[中文](README_CN.md)
 # Heart Visualizer
 <div style="text-align:center">
   <img src="res/Heart%20Visualizer_16_9.png" alt="mod"/>
