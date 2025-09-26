@@ -3,7 +3,6 @@ package github.sweety_banana.heartvisualizer.client.config;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.ConfigData;
 import me.shedaniel.autoconfig.annotation.Config;
-import me.shedaniel.autoconfig.annotation.ConfigEntry;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.text.Text;
@@ -19,7 +18,7 @@ public class HeartVisualizerConfig implements ConfigData {
 
     public static void init() {
         INSTANCE = AutoConfig.getConfigHolder(HeartVisualizerConfig.class).getConfig();
-        INSTANCE.validate();
+        //INSTANCE.validate();
     }
 
     public void validate() {

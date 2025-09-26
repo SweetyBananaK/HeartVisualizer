@@ -18,6 +18,8 @@ public class HeartVisualizerState {
     public float offset = 0;
     public float currentHealth = 0;
     public List<HeartInstance> hearts;
+    public AnimationPhase currentPhase = AnimationPhase.DEACTIVATE;
+    public float rotationOffset = 0;
 
     public HeartVisualizerState() {}
 
@@ -60,5 +62,12 @@ public class HeartVisualizerState {
         // 平滑过渡位置
         public double currentAngle = 0; // 当前渲染角度
         public double targetAngle;  // 目标角度
+    }
+
+    public enum AnimationPhase {
+        APPEAR,
+        DISAPPEAR,
+        ROTATE,
+        DEACTIVATE;
     }
 }

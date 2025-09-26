@@ -1,8 +1,8 @@
 package github.sweety_banana.heartvisualizer.client.config;
 
 import github.sweety_banana.heartvisualizer.client.render.bar.HeartBarRender;
+import github.sweety_banana.heartvisualizer.client.render.circle.HeartCircleRender;
 import github.sweety_banana.heartvisualizer.client.render.count.HeartCountRender;
-import github.sweety_banana.heartvisualizer.client.render.cycle.HeartCycleRender;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
@@ -28,7 +28,7 @@ public class HeartVisualizerConfigScreen extends Screen{
                 .setTitle(Text.translatable("title.heartvisualizer.config"))
                 .setSavingRunnable(() -> {
                     AutoConfig.getConfigHolder(HeartVisualizerConfig.class).save();
-                    HeartCycleRender.updateConfig();
+                    HeartCircleRender.updateConfig();
                     HeartCountRender.updateConfig();
                     HeartBarRender.updateConfig();
                 });
@@ -67,7 +67,7 @@ public class HeartVisualizerConfigScreen extends Screen{
         );
 
         general.addEntry(
-                entryBuilder.startIntSlider(Text.translatable("option.heartvisualizer.heartcycle.heartsize"),
+                entryBuilder.startIntSlider(Text.translatable("option.heartvisualizer.heartcircle.heartsize"),
                                 (int)(HeartVisualizerConfig.INSTANCE.heartSize), 5, 15)
                         .setDefaultValue(9)
                         .setTextGetter(val -> Text.literal(String.valueOf(val)))
@@ -77,15 +77,15 @@ public class HeartVisualizerConfigScreen extends Screen{
                         .build()
         );
 
-        //HeartCycle
+        //heartcircle
         general.addEntry(
-                entryBuilder.startTextDescription(Text.translatable("label.heartvisualizer.heartcycle"))
+                entryBuilder.startTextDescription(Text.translatable("label.heartvisualizer.heartcircle"))
                         .setColor(0xFFFFFFFF)
                         .build()
         );
 
         general.addEntry(
-                entryBuilder.startIntSlider(Text.translatable("option.heartvisualizer.heartcycle.rotateduration"),
+                entryBuilder.startIntSlider(Text.translatable("option.heartvisualizer.heartcircle.rotateduration"),
                                 (int)(HeartVisualizerConfig.INSTANCE.heartCircle.rotateDuration / 1000), 2, 20)
                         .setDefaultValue(5)
                         .setTextGetter(val -> Text.literal(val + " s"))
@@ -96,7 +96,7 @@ public class HeartVisualizerConfigScreen extends Screen{
         );
 
         general.addEntry(
-                entryBuilder.startIntSlider(Text.translatable("option.heartvisualizer.heartcycle.appearduration"),
+                entryBuilder.startIntSlider(Text.translatable("option.heartvisualizer.heartcircle.appearduration"),
                                 (int)(HeartVisualizerConfig.INSTANCE.heartCircle.appearDuration), 100, 1000)
                         .setDefaultValue(300)
                         .setTextGetter(val -> Text.literal(Math.round(val / 100.0) * 100 + " ms"))
@@ -107,20 +107,21 @@ public class HeartVisualizerConfigScreen extends Screen{
         );
 
         general.addEntry(
-                entryBuilder.startIntSlider(Text.translatable("option.heartvisualizer.heartcycle.disappearduration"),
+                entryBuilder.startIntSlider(Text.translatable("option.heartvisualizer.heartcircle.disappearduration"),
                                 (int)(HeartVisualizerConfig.INSTANCE.heartCircle.disappearDuration), 100, 1000)
                         .setDefaultValue(300)
                         .setTextGetter(val -> Text.literal(Math.round(val / 100.0) * 100 + " ms"))
                         .setSaveConsumer(val -> {
                             HeartVisualizerConfig.INSTANCE.heartCircle.disappearDuration = Math.round(val / 100.0) * 100;
-                            HeartCycleRender.updateConfig();
+                            HeartCircleRender.updateConfig();
                         })
                         .build()
         );
 
         general.addEntry(
-                entryBuilder.startBooleanToggle(Text.translatable("option.heartvisualizer.heartcycle.isflashing"), HeartVisualizerConfig.INSTANCE.heartCircle.isFlashing)
+                entryBuilder.startBooleanToggle(Text.translatable("option.heartvisualizer.heartcircle.isflashing"), HeartVisualizerConfig.INSTANCE.heartCircle.isFlashing)
                         .setDefaultValue(false)
+                        .setTooltip(Text.translatable("tooltip.heartvisualizer.isflashing"))
                         .setSaveConsumer(val -> HeartVisualizerConfig.INSTANCE.heartCircle.isFlashing = val)
                         .build()
         );

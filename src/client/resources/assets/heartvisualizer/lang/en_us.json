@@ -4,15 +4,16 @@
   "label.heartvisualizer.general": "General",
   "option.heartvisualizer.isactive": "Heart Visualizer Active",
   "option.heartvisualizer.displaytype": "Display Type",
-  "option.heartvisualizer.displaytype.heart_circle": "Heart Cycle",
+  "option.heartvisualizer.displaytype.heart_circle": "Heart Circle",
   "option.heartvisualizer.displaytype.heart_bar": "Heart On Head",
   "option.heartvisualizer.displaytype.count": "Heart with Count",
   "option.heartvisualizer.showthrough": "Show Through Walls",
-  "option.heartvisualizer.heartcycle.heartsize": "Heart Size",
-  "option.heartvisualizer.heartcycle.rotateduration": "Rotate Duration",
-  "option.heartvisualizer.heartcycle.appearduration": "Appear Duration",
-  "option.heartvisualizer.heartcycle.disappearduration": "Disappear Duration",
-  "option.heartvisualizer.heartcycle.isflashing": "Heart Ring Flashing",
+  "option.heartvisualizer.heartcircle.heartsize": "Heart Size",
+  "option.heartvisualizer.heartcircle.rotateduration": "Rotate Duration",
+  "option.heartvisualizer.heartcircle.appearduration": "Appear Duration",
+  "option.heartvisualizer.heartcircle.disappearduration": "Disappear Duration",
+  "option.heartvisualizer.heartcircle.isflashing": "Heart Circle Flashing",
+  "tooltip.heartvisualizer.isflashing": "If enabled, hearts will flash when they appear.",
   "tooltip.heartvisualizer.showthrough": "If enabled, hearts will be visible even behind walls.",
-  "label.heartvisualizer.heartcycle": "Heart Cycle"
+  "label.heartvisualizer.heartcircle": "Heart Cycle"
 }
