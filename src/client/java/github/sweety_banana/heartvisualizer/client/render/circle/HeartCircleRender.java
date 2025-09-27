@@ -219,7 +219,17 @@ public class HeartCircleRender {
             matrixStack.translate(x, livingEntityRenderState.height*0.7f, z); // y=实体高度+偏移
             matrixStack.multiply(dispatcher.getRotation()); // 始终朝向摄像机
             float baseScale = 0.05f;
-            float scale = baseScale * this.State.scale;
+            float minScale = 0.6f;
+            float maxScale = 2.0f;
+            int baseCount = 10;
+
+            float quantityScale = MathHelper.clamp(
+                    maxScale - (heartTotal - 1) * (maxScale - minScale) / (baseCount - 1),
+                    minScale,
+                    maxScale
+            );
+            System.out.println(quantityScale);
+            float scale = baseScale * this.State.scale * quantityScale;
             opacity = 1F;
             if (HeartVisualizerConfig.INSTANCE.heartCircle.isFlashing && this.State.flashing && heartTotal < 10){
                 float frequency = 4.0f; // 每秒 4 次完整闪烁

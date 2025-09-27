@@ -5,10 +5,14 @@
   "name": "Heart Visualizer",
   "description": "Displays health in hearts, above head, or numerically",
   "authors": ["SweetyBanana", "Fcostar"],
-  "contact": {},
-  "license": "All-Rights-Reserved",
+  "contact": {
+    "homepage": "https://modrinth.com/mod/heartvisualizer",
+    "sources": "https://github.com/SweetyBananaK/HeartVisualizer",
+    "issues": "https://github.com/SweetyBananaK/HeartVisualizer/issues"
+  },
+  "license": "MIT",
   "icon": "assets/heartvisualizer/icon.png",
-  "environment": "*",
+  "environment": "client",
   "entrypoints": {
     "client": [
       "github.sweety_banana.heartvisualizer.client.HeartVisualizerClient"
